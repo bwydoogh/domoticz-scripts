@@ -4,5 +4,5 @@ Python script which can turn on or off all lights, including the iBox.
 
 Easy to use with a virtual switch.
 
-    python milight.py ON
-    python milight.py OFF
+    python milight-home.py ON
+    python milight-home.py OFF
