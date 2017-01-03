@@ -11,8 +11,8 @@ Steps to follow:
 1. Put the script in your Domoticz scripts folder
 2. Change the IP address of the iBox controller in the script: variable **UDP_IP**
 3. Add a virtual/dummy switch in Domoticz (see https://www.domoticz.com/wiki/Wemo#Creating_Dummy_Switches)
-4. The ON action of the dummy switch should be set to: `script:///<script location>/milight-home ON`
-5. The OFF action of the dummy switc should be set to: `script:///<script location>/milight-home OFF`
+4. The ON action of the dummy switch should be set to: `script:///<script location>/milight-home.py ON`
+5. The OFF action of the dummy switc should be set to: `script:///<script location>/milight-home.py OFF`
     
 The script can also be executed in standalone mode of course: 
 
