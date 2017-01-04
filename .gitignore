@@ -1,0 +1,14 @@
+.milight-home-python3.py.un~
+.milight-home-trigger.sh.un~
+.milight-home.py.un~
+_domoticz_main
+_domoticz_main.bat
+download_update.sh
+logrotate/
+lua/
+lua_parsers/
+python/
+readme.txt
+restart_domoticz
+templates/
+update_domoticz
