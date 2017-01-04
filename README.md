@@ -1,6 +1,6 @@
 # Domoticz scripts 
 ## Milight Python script (API V6 - setup: Milight iBox + RGBW bulbs)
-This Python script is able to communicate with a iBox (**API version v6**; see http://www.limitlessled.com/dev/). **The script can turn on or off all lights (all zones), including the iBox.** This script works perfect in combination with a **virtual switch** (ON/OFF) in Domoticz.
+This Python script is able to communicate with a iBox (**API version v6**; see http://www.limitlessled.com/dev/). **The script can turn on or off all lights (all zones), including the iBox, as well as changing the brightness and activating the DISCO mode.** This script works perfect in combination with a **virtual switch** (ON/OFF) in Domoticz.
 
 
 ⚠ This is _work in progress_: zone control, dimming, color setting... are not implemented yet.
@@ -19,4 +19,6 @@ The script can also be executed in standalone mode of course:
     $ python milight-home.py ON
     $ python milight-home.py OFF
 
+Complete list of arguments (besides ON and OFF):
 
+    ON/OFF/DISCO[1-9]/DISCOFASTER/DISCOSLOWER/WHITE/BRIGHT[0-25-50-75-100]
