@@ -16,8 +16,10 @@ Steps to follow:
     
 The script can also be executed in standalone mode of course: 
 
-    $ python milight-home.py ON
-    $ python milight-home.py OFF
+    $ python milight-home.py ON <device> (<device> = 00, 07 or 08)
+    $ python milight-home.py OFF <device> (<device> = 00, 07 or 08)
+    $ python milight-home.py DISCO1 <device>
+    $ python milight-home.py <command> <device> (see below for the list of valid <command>)
 
 Complete list of arguments (besides ON and OFF):
 
