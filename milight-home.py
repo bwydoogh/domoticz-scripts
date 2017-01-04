@@ -1,9 +1,13 @@
 #!/usr/bin/python
 import socket,sys;
 
+# FOR BETTER COMPATIBILITY FOR COLOR INTRODUCTION FROM COLOR PICKER WE NEED TO ADD A CHECKSUM CALCULATOR : CS
+#MESSAGE_LIGHTS_ON  = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 07 03 01 00 00 00 00 00 CS"
+#CS CALCULATION IS : 31+00+00+07+03+01+00+00+00+00+00=3C
+
 # Let's check if an argument ON or OFF is passed in to the script; if not we stop...
 if len(sys.argv) == 1:
-    print "Usage: ON or OFF? Please specify as argument"
+    print "Usage: please specify a valid argument (ON/OFF/DISCO[1-9]/DISCOFASTER/DISCOSLOWER/WHITE/BRIGHT[0-25-50-75-100]."
     raise SystemExit(1)
 
 # Some configuration settings
@@ -35,8 +39,12 @@ MESSAGE_IBOXLT_DISCO6 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 06 00 00 0
 MESSAGE_IBOXLT_DISCO7 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 07 00 00 00 01 00 3D" #GREEN ALERT
 MESSAGE_IBOXLT_DISCO8 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 08 00 00 00 01 00 3E" #BLUE ALERT
 MESSAGE_IBOXLT_DISCO9 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 09 00 00 00 01 00 3F" #WHITE ALERTE
-#SET TO WHITE
+#SET TO COLOR
 MESSAGE_IBOXLT_WHITE = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 03 05 00 00 00 01 00 3A"
+MESSAGE_IBOXLT_RED = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 BA 00 00 00 01 00 ED"
+MESSAGE_IBOXLT_AQUA = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 BA 85 85 85 01 00 27C"
+MESSAGE_IBOXLT_BLUE = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 BA BA BA BA 01 00" "
+
 #BRIGHTNESS
 MESSAGE_IBOXLT_BRIGHT0 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 00 00 00 00 01 00 34" #0%
 MESSAGE_IBOXLT_BRIGHT25 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 19 00 00 00 01 00 4d" #25%
@@ -70,113 +78,131 @@ if sys.argv[1] == "ON":
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)	
-else:
+
+elif sys.argv[1] == "OFF":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_OFF.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_OFF.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO1":
+elif sys.argv[1] == "DISCO1":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO1.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO2":
+elif sys.argv[1] == "DISCO2":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO2.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO3":
+elif sys.argv[1] == "DISCO3":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO3.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 
-if sys.argv[1] == "DISCO4":
+elif sys.argv[1] == "DISCO4":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO4.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO5":
+elif sys.argv[1] == "DISCO5":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO5.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 
-if sys.argv[1] == "DISCO6":
+elif sys.argv[1] == "DISCO6":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO6.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 
-if sys.argv[1] == "DISCO7":
+elif sys.argv[1] == "DISCO7":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO7.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO8":
+elif sys.argv[1] == "DISCO8":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO8.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCO9":
+elif sys.argv[1] == "DISCO9":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO9.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCOFASTER":
+elif sys.argv[1] == "DISCOFASTER":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCOFASTER.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "DISCOSLOWER":
+elif sys.argv[1] == "DISCOSLOWER":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCOSLOWER.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 
-if sys.argv[1] == "WHITE":
+elif sys.argv[1] == "WHITE":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_WHITE.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "BRIGHT0":
+elif sys.argv[1] == "BRIGHT0":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT0.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "BRIGHT25":
+elif sys.argv[1] == "BRIGHT25":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT25.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "BRIGHT50":
+elif sys.argv[1] == "BRIGHT50":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT50.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "BRIGHT75":
+elif sys.argv[1] == "BRIGHT75":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT75.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
 	
-if sys.argv[1] == "BRIGHT100":
+elif sys.argv[1] == "BRIGHT100":
     MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
     MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
     MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT100.replace("I1", iboxId1)
     MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
+	
+elif sys.argv[1] == "RED":
+    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
+    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
+    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_RED.replace("I1", iboxId1)
+    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
+	
+elif sys.argv[1] == "AQUA":
+    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
+    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
+    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_AQUA.replace("I1", iboxId1)
+    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
+
+else:
+    print "No valid argument passed in. See usage"
+    raise SystemExit(1)
+
 
 print "[DEBUG]sending message to the smart bulbs:", MESSAGE_COMMAND
 print "[DEBUG]sending message to the iBox:", MESSAGE_COMMAND_IBOX
