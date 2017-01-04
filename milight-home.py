@@ -1,248 +1,107 @@
 #!/usr/bin/python
-import socket,sys;
+import socket
+import sys
+"""
+Small Python script allowing communication with an iBox controller.
+Can be used as a virtual switch in Domoticz.
+"""
+__author__ = "Benny Wydooghe"
+__email__ = "benny.wydooghe@gmail.com"
 
-# FOR BETTER COMPATIBILITY FOR COLOR INTRODUCTION FROM COLOR PICKER WE NEED TO ADD A CHECKSUM CALCULATOR : CS
-#MESSAGE_LIGHTS_ON  = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 07 03 01 00 00 00 00 00 CS"
-#CS CALCULATION IS : 31+00+00+07+03+01+00+00+00+00+00=3C
+# iBOX IP address - CHANGE THIS TO THE IP-ADDRESS OF YOUR iBOX
+UDP_IP = "192.168.2.170"
 
 # Let's check if an argument ON or OFF is passed in to the script; if not we stop...
-if len(sys.argv) == 1:
-    print "Usage: please specify a valid argument (ON/OFF/DISCO[1-9]/DISCOFASTER/DISCOSLOWER/WHITE/BRIGHT[0-25-50-75-100]."
+# Usage: milight-home.py <command> <device>
+if len(sys.argv) != 3:
+    print "Usage: milight-home.py <command> <device>"
+    print "Examples: milight-home.py ON 07, milight-home.py OFF 00"
     raise SystemExit(1)
 
 # Some configuration settings
-# iBox IP (and UDP port 5987)
-UDP_IP = "192.168.2.170"
-UDP_PORT = 5987
-# UDP port on which we will listen for responses
-UDP_PORT_RECEIVE = 55054
-# Number of times you want to send the UDP commands to the iBox
-# NOTE: only use this when you don't always have a result; not sure what exactly causes this issue
-UDP_TIMES_TO_SEND_COMMAND = 5
+# NOTE: you should not touch them, except the UDP_TIMES_TO_SEND_COMMAND:
+# increase this if you would encounter any issues
+UDP_PORT = 5987 # UDP port on which we will communicate with the iBox
+UDP_PORT_RECEIVE = 55054 # UDP port on which we will listen for responses
+UDP_TIMES_TO_SEND_COMMAND = 5 # Number of times you want to send the UDP commands to the iBox
 
 # The messages, V6 style
 # See http://www.limitlessled.com/dev/ as reference and for examples
+
+def get_command(usercommand, device):
+    """Returns the right iBox command, based on a argument which is passed in to the script"""
+    command_dictionary = {
+        "ON"            : "31 00 00 XX 03 01 00 00 00 00 00",
+        "OFF"           : "31 00 00 XX 03 02 00 00 00 00 00",
+        "BRIGHT0"       : "31 00 00 XX 02 00 00 00 00 01 00 34",
+        "BRIGHT25"      : "31 00 00 XX 02 19 00 00 00 01 00 4D",
+        "BRIGHT50"      : "31 00 00 XX 02 32 00 00 00 01 00 66",
+        "BRIGHT75"      : "31 00 00 XX 02 4b 00 00 00 01 00 7F",
+        "BRIGHT100"     : "31 00 00 XX 02 64 00 00 00 01 00 98",
+        "DISCO1"        : "31 00 00 XX 04 01 00 00 00 01 00 37",
+        "DISCO2"        : "31 00 00 XX 04 02 00 00 00 01 00 38",
+        "DISCO3"        : "31 00 00 XX 04 03 00 00 00 01 00 39",
+        "DISCO4"        : "31 00 00 XX 04 04 00 00 00 01 00 3A",
+        "DISCO5"        : "31 00 00 XX 04 05 00 00 00 01 00 3B",
+        "DISCO6"        : "31 00 00 XX 04 06 00 00 00 01 00 3C",
+        "DISCO7"        : "31 00 00 XX 04 07 00 00 00 01 00 3D",
+        "DISCO8"        : "31 00 00 XX 04 08 00 00 00 01 00 3E",
+        "DISCO9"        : "31 00 00 XX 04 09 00 00 00 01 00 3F",
+        "DISCOFASTER"   : "31 00 00 XX 03 02 00 00 00 01 00 37",
+        "DISCOSLOWER"   : "31 00 00 XX 03 01 00 00 00 01 00 36",
+        "WHITE"         : "31 00 00 XX 03 05 00 00 00 01 00 3A",
+        "RED"           : "31 00 00 XX 01 00 00 00 00 01 00 33",
+        "GREEN"         : "31 00 00 XX 01 00 00 00 54 01 00 87",
+        "BLUE"          : "31 00 00 XX 01 00 00 00 BA 01 00 ED",
+        "AQUA"          : "31 00 00 XX 01 00 00 00 85 01 00 B8",
+    }
+    command = command_dictionary.get(usercommand).replace("XX", device)
+    # Exception for the ON/OFF switch of the iBox
+    if usercommand == "ON" and device == "00":
+        command = command[:15] + "03" + command[17:]
+    elif usercommand == "OFF" and device == "00":
+        command = command[:15] + "04" + command[17:]
+    checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
+    return command + " " + checksum
+
+def get_message(ibox_id1, ibox_id2, usercommand):
+    """Builds a message."""
+    return "80 00 00 00 11" + " " + ibox_id1 + " " + ibox_id2 + " " + "00 00 00" + " " + usercommand
+
+# Below message is the first in a row, used to get the iBox identifiers
 MESSAGE = "20 00 00 00 16 02 62 3A D5 ED A3 01 AE 08 2D 46 61 41 A7 F6 DC AF D3 E6 00 00 1E"
-MESSAGE_LIGHTS_ON  = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 07 03 01 00 00 00 00 00 3C"
-MESSAGE_IBOXLT_ON  = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 00 03 03 00 00 00 00 00 37"
-MESSAGE_LIGHTS_OFF = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 07 03 02 00 00 00 00 00 3D"
-MESSAGE_IBOXLT_OFF = "80 00 00 00 11 I1 I2 00 00 00 31 00 00 00 03 04 00 00 00 00 00 38"
 
-# DISCO CONTROL FOR IBOX
-MESSAGE_IBOXLT_DISCOFASTER = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 03 02 00 00 00 01 00 37"
-MESSAGE_IBOXLT_DISCOSLOWER = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 03 01 00 00 00 01 00 36"
-MESSAGE_IBOXLT_DISCO1 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 01 00 00 00 01 00 37"
-MESSAGE_IBOXLT_DISCO2 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 02 00 00 00 01 00 38"
-MESSAGE_IBOXLT_DISCO3 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 03 00 00 00 01 00 39"
-MESSAGE_IBOXLT_DISCO4 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 04 00 00 00 01 00 3A" 
-MESSAGE_IBOXLT_DISCO5 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 05 00 00 00 01 00 3B" 
-MESSAGE_IBOXLT_DISCO6 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 06 00 00 00 01 00 3C" #RED ALERT
-MESSAGE_IBOXLT_DISCO7 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 07 00 00 00 01 00 3D" #GREEN ALERT
-MESSAGE_IBOXLT_DISCO8 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 08 00 00 00 01 00 3E" #BLUE ALERT
-MESSAGE_IBOXLT_DISCO9 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 04 09 00 00 00 01 00 3F" #WHITE ALERTE
+# Let's start :)
+# STEP 1: send a UDP message to the iBox requesting the ibox identifiers and listen for a response
+SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+SOCK.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+SOCK.bind(('', UDP_PORT_RECEIVE))
+SOCK.sendto(bytearray.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
+SOCK.close()
+SOCK_RECEIVE = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+SOCK_RECEIVE.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+SOCK_RECEIVE.bind(('', UDP_PORT_RECEIVE))
+DATA, ADDR = SOCK_RECEIVE.recvfrom(1024)
+SOCK_RECEIVE.close()
 
-#SET TO COLOR
-MESSAGE_IBOXLT_WHITE =  	"80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 03 05 00 00 00 01 00 3A" #WHITE
-MESSAGE_IBOXLT_RED =    	"80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 00 00 00 00 01 00 33" #RED
-MESSAGE_IBOXLT_GREEN =  	"80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 00 00 00 54 01 00 87" #GREEN
-MESSAGE_IBOXLT_BLUE =   	"80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 00 00 00 BA 01 00 ED" #BLUE
-MESSAGE_IBOXLT_AQUA =       "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 01 00 00 00 85 01 00 B8" #AQUA
+# STEP 2: get the ibox identifiers from the response
+RESPONSE = str(DATA.encode('hex'))
+IBOX_ID1 = RESPONSE[38:40]
+IBOX_ID2 = RESPONSE[40:42]
+print "[DEBUG] received message: ", DATA.encode('hex')
+print "[DEBUG] received message - ibox identifier 1: ", IBOX_ID1
+print "[DEBUG] received message - ibox identifier 2: ", IBOX_ID2
 
-
-#BRIGHTNESS
-MESSAGE_IBOXLT_BRIGHT0 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 00 00 00 00 01 00 34" #0%
-MESSAGE_IBOXLT_BRIGHT25 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 19 00 00 00 01 00 4d" #25%
-MESSAGE_IBOXLT_BRIGHT50 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 32 00 00 00 01 00 66" #50%
-MESSAGE_IBOXLT_BRIGHT75 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 4b 00 00 00 01 00 7f" #75%
-MESSAGE_IBOXLT_BRIGHT100 = "80 00 00 00 11 I1 I2 E6 80 00 31 00 00 00 02 64 00 00 00 01 00 98" #100%
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.bind(('', UDP_PORT_RECEIVE))
-sock.sendto(bytearray.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
-sock.close()
-
-sockreceive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sockreceive.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sockreceive.bind(('', UDP_PORT_RECEIVE))
-
-data, addr = sockreceive.recvfrom(65536)
-print "[DEBUG]received message:", data.encode('hex') 
-sockreceive.close()
-response = str(data.encode('hex'))
-iboxId1 = response[38:40]
-iboxId2 = response[40:42]
-print "[DEBUG]requesting iBox to execute command", iboxId1
-print "[DEBUG]requesting iBox to execute command", iboxId2
-
-# Preparing the messages to sent
-# NOTE: one message to the RGBWW bulbs (07 in the command) and one message to the iBox (00 instead of 07 in the command)
-if sys.argv[1] == "ON":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)	
-
-elif sys.argv[1] == "OFF":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_OFF.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_OFF.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO1":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO1.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO2":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO2.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO3":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO3.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-
-elif sys.argv[1] == "DISCO4":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO4.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO5":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO5.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-
-elif sys.argv[1] == "DISCO6":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO6.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-
-elif sys.argv[1] == "DISCO7":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO7.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO8":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO8.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCO9":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCO9.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCOFASTER":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCOFASTER.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "DISCOSLOWER":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_DISCOSLOWER.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-
-elif sys.argv[1] == "WHITE":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_WHITE.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BRIGHT0":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT0.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BRIGHT25":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT25.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BRIGHT50":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT50.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BRIGHT75":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT75.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BRIGHT100":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BRIGHT100.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "RED":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_RED.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "BLUE":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_BLUE.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "GREEN":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_GREEN.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-	
-elif sys.argv[1] == "AQUA":
-    MESSAGE_COMMAND = MESSAGE_LIGHTS_ON.replace("I1", iboxId1)
-    MESSAGE_COMMAND = MESSAGE_COMMAND.replace("I2", iboxId2)
-    MESSAGE_COMMAND_IBOX = MESSAGE_IBOXLT_AQUA.replace("I1", iboxId1)
-    MESSAGE_COMMAND_IBOX = MESSAGE_COMMAND_IBOX.replace("I2", iboxId2)
-
-
-else:
-    print "No valid argument passed in. See usage"
-    raise SystemExit(1)
-
-
-else:
-    print "No valid argument passed in. See usage"
-    raise SystemExit(1)
-
-
-print "[DEBUG]sending message to the smart bulbs:", MESSAGE_COMMAND
-print "[DEBUG]sending message to the iBox:", MESSAGE_COMMAND_IBOX
-
-socksendto = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socksendto.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-socksendto.bind(('', UDP_PORT_RECEIVE))
+# STEP 3: get the actual message that should be sent
+MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2]))
+print "[DEBUG] sending the following message: ", MESSAGE_COMMAND
+SOCK_SEND_TO = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+SOCK_SEND_TO.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+SOCK_SEND_TO.bind(('', UDP_PORT_RECEIVE))
 for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
-    socksendto.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
-socksendto.close()
+    SOCK_SEND_TO.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
+SOCK_SEND_TO.close()
 
-socksendtoibox = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-socksendtoibox.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-socksendtoibox.bind(('', UDP_PORT_RECEIVE))
-for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
-    socksendtoibox.sendto(bytearray.fromhex(MESSAGE_COMMAND_IBOX), (UDP_IP, UDP_PORT))
-socksendtoibox.close()
-
-print "[DEBUG]message(s) sent!"
+print "[DEBUG] message(s) sent!"
 
 raise SystemExit(0)
