@@ -19,6 +19,6 @@ The script can also be executed in standalone mode of course:
     $ python milight-home.py DISCO1 <device>
     $ python milight-home.py <command> <device> (see below for the list of valid <command>)
 
-Complete list of arguments (besides ON and OFF):
+Complete command list (besides ON and OFF):
 
     ON/OFF/DISCO[1-9]/DISCOFASTER/DISCOSLOWER/WHITE/BRIGHT[0-25-50-75-100]
