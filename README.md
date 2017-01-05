@@ -9,7 +9,8 @@ Steps to follow:
 2. Change the IP address of the iBox controller in the script: variable **UDP_IP**
 3. Add a virtual/dummy switch in Domoticz (see https://www.domoticz.com/wiki/Wemo#Creating_Dummy_Switches)
 4. The ON action of the dummy switch could be set to: `script:///<script location>/milight-home.sh ON`
-5. The OFF action of the dummy switc could be set to: `script:///<script location>/milight-home.sh OFF`
+This action will turn on the lights of the bulbs **and** the iBox. If you only want to have the bulbs on, execute the script as follows (_put a device identifier (00 (=iBox), 07 (= RGBWW) or 08 (=RGBW)) as last argument_): `script:///<script location>/milight-home.sh ON 07` or `script:///<script location>/milight-home.sh ON 08`
+5. The OFF action of the dummy switch could be set to: `script:///<script location>/milight-home.sh OFF`
     
 The script can also be executed in standalone mode of course: 
 
