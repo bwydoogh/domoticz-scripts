@@ -3,9 +3,6 @@
 This Python script is able to communicate with a iBox (**API version v6**; see http://www.limitlessled.com/dev/). **The script can turn on or off all lights (all zones), including the iBox, as well as changing the brightness and activating the DISCO mode.** This script works perfect in combination with a **virtual switch** (ON/OFF) in Domoticz.
 
 
-⚠ This is _work in progress_: zone control, dimming, color setting... are not implemented yet.
-
-
 Steps to follow:
 
 1. Put the script in your Domoticz scripts folder
