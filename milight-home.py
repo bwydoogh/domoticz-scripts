@@ -77,13 +77,7 @@ SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 SOCK.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 SOCK.bind(('', UDP_PORT_RECEIVE))
 SOCK.sendto(bytearray.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
-#SOCK.close()
-#SOCK_RECEIVE = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#SOCK_RECEIVE.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-#SOCK_RECEIVE.bind(('', UDP_PORT_RECEIVE))
-#DATA, ADDR = SOCK_RECEIVE.recvfrom(1024)
 DATA, ADDR = SOCK.recvfrom(1024)
-#SOCK_RECEIVE.close()
 
 # STEP 2: get the ibox identifiers from the response
 RESPONSE = str(DATA.encode('hex'))
@@ -96,13 +90,8 @@ print "[DEBUG] received message - ibox identifier 2: ", IBOX_ID2
 # STEP 3: get the actual message that should be sent
 MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2]))
 print "[DEBUG] sending the following message: ", MESSAGE_COMMAND
-#SOCK_SEND_TO = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#SOCK_SEND_TO.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-#SOCK_SEND_TO.bind(('', UDP_PORT_RECEIVE))
 for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
-#    SOCK_SEND_TO.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
     SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
-#SOCK_SEND_TO.close()
 SOCK.close()
 
 print "[DEBUG] message(s) sent!"
