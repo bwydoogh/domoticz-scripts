@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import socket
 import sys
+import time
 """
 Small Python script allowing communication with an iBox controller.
 Can be used as a virtual switch in Domoticz.
@@ -24,6 +25,14 @@ if len(sys.argv) != 3:
 UDP_PORT = 5987 # UDP port on which we will communicate with the iBox
 UDP_PORT_RECEIVE = 55054 # UDP port on which we will listen for responses
 UDP_TIMES_TO_SEND_COMMAND = 5 # Number of times you want to send the UDP commands to the iBox
+LOGFILE = "milight-home.log" # Filename where some debug messages are written to
+
+def log(message):
+    debug_message = "[DEBUG - " + time.ctime() + "] " + message
+    print debug_message
+    logfile = open(LOGFILE, "a")
+    logfile.write(debug_message + "\n")
+    logfile.close()
 
 # The messages, V6 style
 # See http://www.limitlessled.com/dev/ as reference and for examples
@@ -83,17 +92,17 @@ DATA, ADDR = SOCK.recvfrom(1024)
 RESPONSE = str(DATA.encode('hex'))
 IBOX_ID1 = RESPONSE[38:40]
 IBOX_ID2 = RESPONSE[40:42]
-print "[DEBUG] received message: ", DATA.encode('hex')
-print "[DEBUG] received message - ibox identifier 1: ", IBOX_ID1
-print "[DEBUG] received message - ibox identifier 2: ", IBOX_ID2
+log("received message: " + DATA.encode('hex'))
+log("received message - ibox identifier 1: " + IBOX_ID1)
+log("received message - ibox identifier 2: " + IBOX_ID2)
 
 # STEP 3: get the actual message that should be sent
 MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2]))
-print "[DEBUG] sending the following message: ", MESSAGE_COMMAND
+log("sending the following message: " + MESSAGE_COMMAND)
 for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
     SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
 SOCK.close()
 
-print "[DEBUG] message(s) sent!"
+log("message sent!")
 
 raise SystemExit(0)
