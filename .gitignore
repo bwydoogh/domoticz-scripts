@@ -1,6 +1,4 @@
-.milight-home-python3.py.un~
-.milight-home-trigger.sh.un~
-.milight-home.py.un~
+*.un~
 _domoticz_main
 _domoticz_main.bat
 download_update.sh
@@ -12,3 +10,4 @@ readme.txt
 restart_domoticz
 templates/
 update_domoticz
+*.log
