@@ -97,7 +97,7 @@ log("received message - ibox identifier 1: " + IBOX_ID1)
 log("received message - ibox identifier 2: " + IBOX_ID2)
 
 # STEP 3: get the actual message that should be sent
-MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2]))
+MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2)))
 log("sending the following message: " + MESSAGE_COMMAND)
 for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
     SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
