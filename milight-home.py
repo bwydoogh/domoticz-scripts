@@ -14,9 +14,9 @@ UDP_IP = "192.168.2.170"
 
 # Let's check if an argument ON or OFF is passed in to the script; if not we stop...
 # Usage: milight-home.py <command> <device>
-if len(sys.argv) != 3:
-    print "Usage: milight-home.py <command> <device>"
-    print "Examples: milight-home.py ON 07, milight-home.py OFF 00"
+if len(sys.argv) != 4:
+    print "Usage: milight-home.py <command> <device: 00-07-08> <zone: 01-04 or 00>"
+    print "Examples: milight-home.py ON 07 00, milight-home.py OFF 00 00"
     raise SystemExit(1)
 
 # Some configuration settings
@@ -37,34 +37,35 @@ def log(message):
 # The messages, V6 style
 # See http://www.limitlessled.com/dev/ as reference and for examples
 
-def get_command(usercommand, device):
+def get_command(usercommand, device, zone):
     """Returns the right iBox command, based on a argument which is passed in to the script"""
     command_dictionary = {
-        "ON"            : "31 00 00 XX 03 01 00 00 00 00 00",
-        "OFF"           : "31 00 00 XX 03 02 00 00 00 00 00",
-        "BRIGHT0"       : "31 00 00 XX 02 00 00 00 00 01 00",
-        "BRIGHT25"      : "31 00 00 XX 02 19 00 00 00 01 00",
-        "BRIGHT50"      : "31 00 00 XX 02 32 00 00 00 01 00",
-        "BRIGHT75"      : "31 00 00 XX 02 4b 00 00 00 01 00",
-        "BRIGHT100"     : "31 00 00 XX 02 64 00 00 00 01 00",
-        "DISCO1"        : "31 00 00 XX 04 01 00 00 00 01 00",
-        "DISCO2"        : "31 00 00 XX 04 02 00 00 00 01 00",
-        "DISCO3"        : "31 00 00 XX 04 03 00 00 00 01 00",
-        "DISCO4"        : "31 00 00 XX 04 04 00 00 00 01 00",
-        "DISCO5"        : "31 00 00 XX 04 05 00 00 00 01 00",
-        "DISCO6"        : "31 00 00 XX 04 06 00 00 00 01 00",
-        "DISCO7"        : "31 00 00 XX 04 07 00 00 00 01 00",
-        "DISCO8"        : "31 00 00 XX 04 08 00 00 00 01 00",
-        "DISCO9"        : "31 00 00 XX 04 09 00 00 00 01 00",
-        "DISCOFASTER"   : "31 00 00 XX 03 02 00 00 00 01 00",
-        "DISCOSLOWER"   : "31 00 00 XX 03 01 00 00 00 01 00",
-        "WHITE"         : "31 00 00 XX 03 05 00 00 00 01 00",
-        "RED"           : "31 00 00 XX 01 00 00 00 00 01 00",
-        "GREEN"         : "31 00 00 XX 01 00 00 00 54 01 00",
-        "BLUE"          : "31 00 00 XX 01 00 00 00 BA 01 00",
-        "AQUA"          : "31 00 00 XX 01 00 00 00 85 01 00",
+        "ON"            : "31 00 00 XX 03 01 00 00 00 YY 00",
+        "OFF"           : "31 00 00 XX 03 02 00 00 00 YY 00",
+        "BRIGHT0"       : "31 00 00 XX 02 00 00 00 00 YY 00",
+        "BRIGHT25"      : "31 00 00 XX 02 19 00 00 00 YY 00",
+        "BRIGHT50"      : "31 00 00 XX 02 32 00 00 00 YY 00",
+        "BRIGHT75"      : "31 00 00 XX 02 4b 00 00 00 YY 00",
+        "BRIGHT100"     : "31 00 00 XX 02 64 00 00 00 YY 00",
+        "DISCO1"        : "31 00 00 XX 04 01 00 00 00 YY 00",
+        "DISCO2"        : "31 00 00 XX 04 02 00 00 00 YY 00",
+        "DISCO3"        : "31 00 00 XX 04 03 00 00 00 YY 00",
+        "DISCO4"        : "31 00 00 XX 04 04 00 00 00 YY 00",
+        "DISCO5"        : "31 00 00 XX 04 05 00 00 00 YY 00",
+        "DISCO6"        : "31 00 00 XX 04 06 00 00 00 YY 00",
+        "DISCO7"        : "31 00 00 XX 04 07 00 00 00 YY 00",
+        "DISCO8"        : "31 00 00 XX 04 08 00 00 00 YY 00",
+        "DISCO9"        : "31 00 00 XX 04 09 00 00 00 YY 00",
+        "DISCOFASTER"   : "31 00 00 XX 03 02 00 00 00 YY 00",
+        "DISCOSLOWER"   : "31 00 00 XX 03 01 00 00 00 YY 00",
+        "WHITE"         : "31 00 00 XX 03 05 00 00 00 YY 00",
+        "RED"           : "31 00 00 XX 01 00 00 00 00 YY 00",
+        "GREEN"         : "31 00 00 XX 01 00 00 00 54 YY 00",
+        "BLUE"          : "31 00 00 XX 01 00 00 00 BA YY 00",
+        "AQUA"          : "31 00 00 XX 01 00 00 00 85 YY 00",
     }
     command = command_dictionary.get(usercommand).replace("XX", device)
+    command = command.replace("YY", zone)
     # Exception for the ON/OFF switch of the iBox
     if usercommand == "ON" and device == "00":
         command = command[:15] + "03" + command[17:]
@@ -97,7 +98,7 @@ log("received message - ibox identifier 1: " + IBOX_ID1)
 log("received message - ibox identifier 2: " + IBOX_ID2)
 
 # STEP 3: get the actual message that should be sent
-MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2)))
+MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2), sys.argv[3].zfill(2)))
 log("sending the following message: " + MESSAGE_COMMAND)
 for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
     SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
