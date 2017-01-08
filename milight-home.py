@@ -25,7 +25,7 @@ if len(sys.argv) != 3:
 UDP_PORT = 5987 # UDP port on which we will communicate with the iBox
 UDP_PORT_RECEIVE = 55054 # UDP port on which we will listen for responses
 UDP_TIMES_TO_SEND_COMMAND = 5 # Number of times you want to send the UDP commands to the iBox
-LOGFILE = "milight-home.log" # Filename where some debug messages are written to
+LOGFILE = "/home/pi/domoticz/scripts/milight-home.log" # Filename where some debug messages are written to
 
 def log(message):
     debug_message = "[DEBUG - " + time.ctime() + "] " + message
