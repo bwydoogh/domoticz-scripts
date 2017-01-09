@@ -2,6 +2,7 @@
 import socket
 import sys
 import time
+import select
 """
 Small Python script allowing communication with an iBox controller.
 Can be used as a virtual switch in Domoticz.
@@ -82,28 +83,36 @@ def get_message(ibox_id1, ibox_id2, usercommand):
 MESSAGE = "20 00 00 00 16 02 62 3A D5 ED A3 01 AE 08 2D 46 61 41 A7 F6 DC AF D3 E6 00 00 1E"
 
 # Let's start :)
+log("executing MiLight script... got the following arguments passed in: " + ' - '.join(sys.argv[1:]))
+
 # STEP 1: send a UDP message to the iBox requesting the ibox identifiers and listen for a response
+log("starting... sending message " + MESSAGE)
 SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 SOCK.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+SOCK.setblocking(0)
 SOCK.bind(('', UDP_PORT_RECEIVE))
 SOCK.sendto(bytearray.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
-DATA, ADDR = SOCK.recvfrom(1024)
 
-# STEP 2: get the ibox identifiers from the response
-RESPONSE = str(DATA.encode('hex'))
-IBOX_ID1 = RESPONSE[38:40]
-IBOX_ID2 = RESPONSE[40:42]
-log("received message: " + DATA.encode('hex'))
-log("received message - ibox identifier 1: " + IBOX_ID1)
-log("received message - ibox identifier 2: " + IBOX_ID2)
+READY = select.select([SOCK], [], [], 5) # We wait 5 seconds for an answer of the iBox
+if READY[0]:
+    DATA, ADDR = SOCK.recvfrom(1024)
 
-# STEP 3: get the actual message that should be sent
-MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2), sys.argv[3].zfill(2)))
-log("sending the following message: " + MESSAGE_COMMAND)
-for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
-    SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
-SOCK.close()
+    # STEP 2: get the ibox identifiers from the response
+    RESPONSE = str(DATA.encode('hex'))
+    IBOX_ID1 = RESPONSE[38:40]
+    IBOX_ID2 = RESPONSE[40:42]
+    log("received message: " + DATA.encode('hex'))
+    log("received message: found iBoxID1 " + IBOX_ID1 + " and iBoxID2 " + IBOX_ID2)
 
-log("message sent!")
+    # STEP 3: get the actual message that should be sent
+    MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2), sys.argv[3].zfill(2)))
+    log("sending the following message: " + MESSAGE_COMMAND)
+    for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
+        log("sending attempt #" + str(x))
+        SOCK.sendto(bytearray.fromhex(MESSAGE_COMMAND), (UDP_IP, UDP_PORT))
+        log("sending attempt #" + str(x) + ": sent!")
+    SOCK.close()
+
+    log("messages are sent!")
 
 raise SystemExit(0)
