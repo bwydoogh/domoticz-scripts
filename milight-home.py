@@ -16,8 +16,11 @@ UDP_IP = "192.168.2.170"
 # Let's check if an argument ON or OFF is passed in to the script; if not we stop...
 # Usage: milight-home.py <command> <device>
 if len(sys.argv) != 4:
-    print "Usage: milight-home.py <command> <device: 00-07-08> <zone: 01-04 or 00>"
-    print "Examples: milight-home.py ON 07 00, milight-home.py OFF 00 00"
+    print "Usage 1: milight-home.py <command> <device: 00-07-08> <zone: 01-04 or 00>"
+    print "Usage 2: milight-home.py \"<full-command-9-bytes>\" <zone: 01-04 or 00>"
+    print "Example usage 1: milight-home.py ON 07 00"
+    print "Example usage 1: milight-home.py OFF 00 00"
+    print "Example usage 2: milight-home.py CMD \"31 00 00 08 04 02 00 00 00\" 04"
     raise SystemExit(1)
 
 # Some configuration settings
@@ -75,6 +78,12 @@ def get_command(usercommand, device, zone):
     checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
     return command + " " + checksum
 
+# Completing the command when the user passed in a full 9 byte command
+def get_command_from_user(full_command, zone):
+    command = full_command + " " + zone
+    checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
+    return command + " " + checksum
+
 def get_message(ibox_id1, ibox_id2, usercommand):
     """Builds a message."""
     return "80 00 00 00 11" + " " + ibox_id1 + " " + ibox_id2 + " " + "00 00 00" + " " + usercommand
@@ -105,7 +114,10 @@ if READY[0]:
     log("received message: found iBoxID1 " + IBOX_ID1 + " and iBoxID2 " + IBOX_ID2)
 
     # STEP 3: get the actual message that should be sent
-    MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2), sys.argv[3].zfill(2)))
+    if sys.argv[1] == "CMD":
+        MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command_from_user(sys.argv[2], sys.argv[3].zfill(2)))
+    else:    
+        MESSAGE_COMMAND = get_message(IBOX_ID1, IBOX_ID2, get_command(sys.argv[1], sys.argv[2].zfill(2), sys.argv[3].zfill(2)))
     log("sending the following message: " + MESSAGE_COMMAND)
     for x in range(0, UDP_TIMES_TO_SEND_COMMAND):
         log("sending attempt #" + str(x))
