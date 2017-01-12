@@ -12,6 +12,7 @@ This Python script is able to communicate with a iBox (**API version v6**; see h
 This action will turn on the lights of the bulbs **and** the iBox. If you only want to have the bulbs on, execute the script as follows (_put a device identifier (00 (=iBox), 07 (= RGBWW) or 08 (=RGBW)) as second last argument; specify the zone (00 or 01-04) as last argument_): `script:///<script location>/milight-home.sh ON 07 01` or `script:///<script location>/milight-home.sh ON 08 01`
 5. The OFF action of the dummy switch could be set to: `script:///<script location>/milight-home.sh OFF`
 
+
 ### Standalone usage ###
    
 The script can also be executed in standalone mode of course: 
@@ -24,3 +25,14 @@ The script can also be executed in standalone mode of course:
 Complete command list (besides ON and OFF):
 
     ON/OFF/DISCO[1-9]/DISCOFASTER/DISCOSLOWER/WHITE/BRIGHT[0-25-50-75-100]/RED/GREEN/BLUE/AQUA
+
+
+### Advanced usage: pass in the full 9 byte command ###
+
+The script allows you to pass in the full 9 byte command (see http://www.limitlessled.com/dev/ for documentation). This can be useful when you want to tryout some commands or when you are debugging your setup.
+
+    $ python milight-home.py CMD <full 9 byte command> <zone>
+
+For example:
+
+    $ python milight-home.py CMD "31 00 00 07 03 01 00 00 00 00" 00
