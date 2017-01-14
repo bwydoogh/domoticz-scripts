@@ -82,7 +82,7 @@ def get_command(usercommand, device, zone):
 def get_command_from_user(full_command, zone):
     command = full_command + " " + zone
     checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
-    return command + " " + checksum
+    return command + " " + "00" + " " + checksum
 
 def get_message(ibox_id1, ibox_id2, usercommand):
     """Builds a message."""
