@@ -70,11 +70,17 @@ def get_command(usercommand, device, zone):
     }
     command = command_dictionary.get(usercommand).replace("XX", device)
     command = command.replace("YY", zone)
-    # Exception for the ON/OFF switch of the iBox
-    if usercommand == "ON" and device == "00":
-        command = command[:15] + "03" + command[17:]
-    elif usercommand == "OFF" and device == "00":
-        command = command[:15] + "04" + command[17:]
+    # Exception for the ON/OFF switch (= device type dependent...)
+    if usercommand == "ON": 
+        if device == "00":
+            command = command[:15] + "03" + command[17:]
+        elif device == "08":
+            command = command[:12] + "04" + command[14:]
+    elif usercommand == "OFF":
+        if device == "00":
+            command = command[:15] + "04" + command[17:]
+        elif device == "08":
+            command = command[:12] + "04" + command[14:]
     checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
     return command + " " + checksum
 
