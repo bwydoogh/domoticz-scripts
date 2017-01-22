@@ -34,7 +34,7 @@ LOGFILE = "/home/pi/domoticz/scripts/milight-home.log" # Filename where some deb
 def log(message):
     debug_message = "[DEBUG - " + time.ctime() + "] " + message
     print debug_message
-    logfile = open(LOGFILE, "a")
+    logfile = open(LOGFILE, "a+")
     logfile.write(debug_message + "\n")
     logfile.close()
 
