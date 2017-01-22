@@ -81,6 +81,9 @@ def get_command(usercommand, device, zone):
             command = command[:15] + "04" + command[17:]
         elif device == "08":
             command = command[:12] + "04" + command[14:]
+    elif usercommand.startswith("BRIGHT"):
+        if device == "08":
+            command = command[:12] + "03" + command[14:]
     checksum = ('%x' % sum(int(x, 16) for x in command.split())).upper()
     return command + " " + checksum
 
