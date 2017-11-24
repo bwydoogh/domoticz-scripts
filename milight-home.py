@@ -62,11 +62,12 @@ def get_command(usercommand, device, zone):
         "DISCO9"        : "31 00 00 XX 04 09 00 00 00 YY 00",
         "DISCOFASTER"   : "31 00 00 XX 03 02 00 00 00 YY 00",
         "DISCOSLOWER"   : "31 00 00 XX 03 01 00 00 00 YY 00",
-        "WHITE"         : "31 00 00 XX 03 05 00 00 00 YY 00",
+        "WHITE"         : "31 00 00 XX 05 64 00 00 00 YY 00",
         "RED"           : "31 00 00 XX 01 00 00 00 00 YY 00",
         "GREEN"         : "31 00 00 XX 01 00 00 00 54 YY 00",
         "BLUE"          : "31 00 00 XX 01 00 00 00 BA YY 00",
-        "AQUA"          : "31 00 00 XX 01 00 00 00 85 YY 00",
+        "AQUA"          : "31 00 00 XX 01 00 00 00 85 YY 00",   
+        "YELLOW"        : "31 00 00 XX 01 00 00 00 3B YY 00",
     }
     command = command_dictionary.get(usercommand).replace("XX", device)
     command = command.replace("YY", zone)
